@@ -141,7 +141,29 @@ def preprocess_topological_polysemy_data(raw_data_dir: str, output_dir: str) -> 
     if not isdir(semeval_2010_14_raw_data_dir):
         print("Extracting raw training data from SemEval-2010 task 14...")
         with tarfile.open(semeval_2010_14_raw_data_filepath) as tar_file:
-            tar_file.extractall(semeval_2010_14_raw_data_dir)
+            
+            import os
+            
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(tar_file, semeval_2010_14_raw_data_dir)
         print("Done!")
 
     if not isdir(semeval_2010_14_training_data_sentences_dir):
